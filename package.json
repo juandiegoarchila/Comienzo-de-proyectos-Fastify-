@@ -1,0 +1,63 @@
+{
+  "name": "servi",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Este proyecto nace de la necesidad de contar con una estructura base sólida para el desarrollo de aplicaciones en Node.js con Express.js. Su objetivo es evitar la configuración repetitiva en cada nuevo proyecto, proporcionando una plantilla bien organizada que sirva como punto de partida.",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "mocha --reporter spec --exit \"src/tests/**/*.test.js\"",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fastify/cors": "^10.0.2",
+    "@fastify/helmet": "^13.0.1",
+    "@fastify/swagger": "^9.4.2",
+    "@fastify/swagger-ui": "^5.2.1",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-handlebars": "^8.0.1",
+    "express-validator": "^7.2.1",
+    "fastify": "^5.2.1",
+    "fastify-cors": "^6.1.0",
+    "fastify-helmet": "^7.1.0",
+    "fastify-jwt": "^4.2.0",
+    "fastify-swagger": "^5.2.0",
+    "firebase-admin": "^13.1.0",
+    "google-gax": "^4.4.1",
+    "helmet": "^8.0.0",
+    "joi": "^17.13.3",
+    "morgan": "^1.10.0",
+    "node-fetch": "^3.3.2",
+    "pino": "^9.6.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "chai": "^5.2.0",
+    "eslint": "^9.20.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.4.3",
+    "mocha": "^11.1.0",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.5.1",
+    "supertest": "^7.0.0"
+  }
+}

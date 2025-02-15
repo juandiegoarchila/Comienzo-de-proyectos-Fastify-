@@ -1,0 +1,38 @@
+# Dependencias de Node.js
+node_modules/
+package-lock.json
+
+# Variables de entorno
+.env
+*.env
+
+# Archivos específicos de Firebase
+firebase.json
+firestore.rules
+firestore.indexes.json
+
+# Configuración de Husky
+.husky/
+
+# Archivos de configuración y formateo
+.prettierrc
+.eslintrc
+.editorconfig
+
+# Archivos de logs y errores
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Caché de npm y Yarn
+.npm/
+.yarn/
+
+# Configuración de IDEs (VS Code, JetBrains, etc.)
+.vscode/
+.idea/
+
+# Archivos de pruebas y cobertura
+coverage/
