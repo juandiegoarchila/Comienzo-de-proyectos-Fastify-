@@ -3,7 +3,6 @@ import { getUsers, createUser, updateUser, deleteUser } from '../controllers/use
 import { userBodySchema, updateUserSchema } from './schemas/userSchema.js';
 
 async function userRoutes(fastify, options) {
-  // Definición de rutas
   fastify.get('/users', getUsers);
   fastify.post('/users', { schema: { body: userBodySchema } }, createUser);
   fastify.put('/users/:id', { schema: { body: updateUserSchema } }, updateUser);

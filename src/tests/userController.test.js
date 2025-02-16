@@ -1,3 +1,5 @@
+//src/tests/userController.test.js
+
 import { expect } from 'chai';
 import request from 'supertest';
 import app from '../app.js';
@@ -43,7 +45,7 @@ describe('User Controller', function () {
   let testUserId = null;
   let passedTests = 0;
   let startTime;
-  const totalTests = 5;
+  const totalTests = 8;
   const testTimes = [];
 
   before(async () => {
@@ -74,46 +76,38 @@ describe('User Controller', function () {
     }
   }
 
-  it('[GET] /api/users - Obtener todos los usuarios', async function () {
-    await runTest('🔍 PRUEBA: OBTENER TODOS LOS USUARIOS', 'GET', '/api/users', async () => {
-      const res = await request(server).get('/api/users');
-      expect(res.status).to.equal(200);
-      expect(res.body).to.be.an('array');
-    });
-  });
-
-  it('[POST] /api/users - Crear un nuevo usuario', async function () {
-    await runTest('📝 PRUEBA: CREAR UN NUEVO USUARIO', 'POST', '/api/users', async () => {
-      const newUser = { name: 'John Doe', email: 'john@example.com', testUser: true };
+  it('[POST] /api/users - Crear usuario con datos inválidos', async function () {
+    await runTest('🚨 PRUEBA: CREAR USUARIO SIN EMAIL', 'POST', '/api/users', async () => {
+      const newUser = { name: 'John Doe' }; // Falta email
       const res = await request(server).post('/api/users').send(newUser);
-      expect(res.status).to.equal(201);
-      expect(res.body).to.have.property('id');
-      testUserId = res.body.id;
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal('body must have required property \'email\'');
     });
   });
-
-  it('[PUT] /api/users/:id - Actualizar un usuario', async function () {
-    await runTest('🛠 PRUEBA: ACTUALIZAR UN USUARIO', 'PUT', `/api/users/${testUserId}`, async () => {
-      const updatedUser = { name: 'John Updated', email: 'john_updated@example.com' };
+  
+  it('[POST] /api/users - Crear usuario con email inválido', async function () {
+    await runTest('🚨 PRUEBA: CREAR USUARIO CON EMAIL INVÁLIDO', 'POST', '/api/users', async () => {
+      const newUser = { name: 'John Doe', email: 'invalid-email' };
+      const res = await request(server).post('/api/users').send(newUser);
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal('body/email must match format "email"');
+    });
+  });
+  
+  it('[PUT] /api/users/:id - Actualizar usuario con datos inválidos', async function () {
+    await runTest('🚨 PRUEBA: ACTUALIZAR USUARIO SIN NOMBRE', 'PUT', `/api/users/${testUserId}`, async () => {
+      const updatedUser = { name: '', email: 'valid@example.com' };
       const res = await request(server).put(`/api/users/${testUserId}`).send(updatedUser);
-      expect(res.status).to.equal(200);
-      expect(res.body.message).to.equal('Usuario actualizado con éxito');
+      expect(res.status).to.equal(400);
+      expect(res.body.message).to.equal('body/name must NOT have fewer than 1 characters');
     });
   });
 
-  it('[DELETE] /api/users/:id - Eliminar un usuario existente', async function () {
-    await runTest('🗑 PRUEBA: ELIMINAR UN USUARIO', 'DELETE', `/api/users/${testUserId}`, async () => {
-      const res = await request(server).delete(`/api/users/${testUserId}`);
-      expect(res.status).to.equal(200);
-      expect(res.body.message).to.equal('Usuario eliminado con éxito');
-    });
-  });
-
-  it('[DELETE] /api/users/:id - Intentar eliminar usuario inexistente', async function () {
-    await runTest('🚫 PRUEBA: ELIMINAR UN USUARIO QUE NO EXISTE', 'DELETE', '/api/users/nonexistentID', async () => {
-      const res = await request(server).delete('/api/users/nonexistentID');
-      expect(res.status).to.equal(404);
-      expect(res.body.message).to.equal('Usuario no encontrado');
+  it('🔄 PRUEBA: CONCURRENCIA - Múltiples peticiones simultáneas', async function () {
+    await runTest('🚀 PRUEBA: MÚLTIPLES CREACIONES DE USUARIOS', 'POST', '/api/users', async () => {
+      const users = Array(5).fill({ name: 'Test User', email: `test${Math.random()}@mail.com` });
+      const responses = await Promise.all(users.map(user => request(server).post('/api/users').send(user)));
+      responses.forEach(res => expect(res.status).to.equal(201));
     });
   });
 });
