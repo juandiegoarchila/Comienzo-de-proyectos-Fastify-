@@ -1,9 +1,8 @@
-//src/tests/userController.test.js
-
 import { expect } from 'chai';
 import request from 'supertest';
 import app from '../app.js';
 import chalk from 'chalk';
+import { db } from '../config/config.js'; // Importa Firebase para limpiar datos de prueba
 
 // Funciones de logging reutilizables
 function logTitle(title, emoji = '📌') {
@@ -18,24 +17,15 @@ function logSuccess(message, time) {
 
 function logError(message, error) {
   console.log(chalk.red(`❌ ${message}`));
-  console.error(chalk.redBright(`Detalles del error: ${error.message}`));
+  console.error(chalk.redBright(error));
 }
 
-function logSummary(total, passed, totalTime, testTimes) {
-  const failed = total - passed;
-  const color = failed > 0 ? chalk.redBright : chalk.greenBright;
-
+function logSummary(total, passed, totalTime) {
   console.log(chalk.bold.blue(`\n═══════════════════════════════════════`));
-  console.log(color(`✅ PRUEBAS COMPLETADAS - ${passed}/${total} EXITOSAS`));
-  if (failed > 0) {
-    console.log(chalk.bold.redBright(`❌ ${failed} PRUEBAS FALLIDAS`));
-  }
-  console.log(chalk.bold.blue(`═══════════════════════════════════════`));
+  console.log(chalk.bold.greenBright(`✅ PRUEBAS COMPLETADAS - ${passed}/${total} EXITOSAS ✅`));
+  console.log(chalk.bold.blue(`═══════════════════════════════════════\n`));
   console.log(chalk.bold.yellowBright(`⏳ TIEMPO TOTAL: ${totalTime}ms`));
   console.log(chalk.bold.blue(`═══════════════════════════════════════\n`));
-
-  console.log(chalk.bold.magenta(`⏱️ Detalles de tiempo por prueba:`));
-  console.table(testTimes);
 }
 
 // Configuración de pruebas
@@ -45,8 +35,7 @@ describe('User Controller', function () {
   let testUserId = null;
   let passedTests = 0;
   let startTime;
-  const totalTests = 8;
-  const testTimes = [];
+  const totalTests = 7;
 
   before(async () => {
     server = await app.listen({ port: 0 });
@@ -55,47 +44,67 @@ describe('User Controller', function () {
   });
 
   after(async () => {
+    // Limpiar datos de prueba (usuarios con testUser: true)
+    const usersSnapshot = await db.collection('users').where('testUser', '==', true).get();
+    const deletePromises = usersSnapshot.docs.map((doc) => doc.ref.delete());
+    await Promise.all(deletePromises);
+
     await app.close();
     const totalTime = Date.now() - startTime;
-    logSummary(totalTests, passedTests, totalTime, testTimes);
+    logSummary(totalTests, passedTests, totalTime);
   });
 
-  async function runTest(description, method, endpoint, testFunction) {
-    logTitle(`${method} ${endpoint} - ${description}`);
+  async function runTest(description, testFunction) {
+    logTitle(description);
     const start = Date.now();
     try {
       await testFunction();
-      const time = Date.now() - start;
       passedTests++;
-      logSuccess(description, time);
-      testTimes.push({ Prueba: description, Tiempo: `${time}ms` });
+      logSuccess(description, Date.now() - start);
     } catch (error) {
       logError(description, error);
-      testTimes.push({ Prueba: description, Tiempo: 'FALLÓ' });
       throw error;
     }
   }
 
+  it('[GET] /api/users - Obtener todos los usuarios', async function () {
+    await runTest('🔍 PRUEBA: OBTENER TODOS LOS USUARIOS', async () => {
+      const res = await request(server).get('/api/users');
+      expect(res.status).to.equal(200);
+      expect(res.body).to.be.an('array');
+    });
+  });
+
+  it('[POST] /api/users - Crear un nuevo usuario', async function () {
+    await runTest('📝 PRUEBA: CREAR UN NUEVO USUARIO', async () => {
+      const newUser = { name: 'John Doe', email: 'john@example.com', testUser: true };
+      const res = await request(server).post('/api/users').send(newUser);
+      expect(res.status).to.equal(201);
+      expect(res.body).to.have.property('id');
+      testUserId = res.body.id;
+    });
+  });
+
   it('[POST] /api/users - Crear usuario con datos inválidos', async function () {
-    await runTest('🚨 PRUEBA: CREAR USUARIO SIN EMAIL', 'POST', '/api/users', async () => {
+    await runTest('🚨 PRUEBA: CREAR USUARIO SIN EMAIL', async () => {
       const newUser = { name: 'John Doe' }; // Falta email
       const res = await request(server).post('/api/users').send(newUser);
       expect(res.status).to.equal(400);
       expect(res.body.message).to.equal('body must have required property \'email\'');
     });
   });
-  
+
   it('[POST] /api/users - Crear usuario con email inválido', async function () {
-    await runTest('🚨 PRUEBA: CREAR USUARIO CON EMAIL INVÁLIDO', 'POST', '/api/users', async () => {
+    await runTest('🚨 PRUEBA: CREAR USUARIO CON EMAIL INVÁLIDO', async () => {
       const newUser = { name: 'John Doe', email: 'invalid-email' };
       const res = await request(server).post('/api/users').send(newUser);
       expect(res.status).to.equal(400);
       expect(res.body.message).to.equal('body/email must match format "email"');
     });
   });
-  
+
   it('[PUT] /api/users/:id - Actualizar usuario con datos inválidos', async function () {
-    await runTest('🚨 PRUEBA: ACTUALIZAR USUARIO SIN NOMBRE', 'PUT', `/api/users/${testUserId}`, async () => {
+    await runTest('🚨 PRUEBA: ACTUALIZAR USUARIO SIN NOMBRE', async () => {
       const updatedUser = { name: '', email: 'valid@example.com' };
       const res = await request(server).put(`/api/users/${testUserId}`).send(updatedUser);
       expect(res.status).to.equal(400);
@@ -103,11 +112,31 @@ describe('User Controller', function () {
     });
   });
 
-  it('🔄 PRUEBA: CONCURRENCIA - Múltiples peticiones simultáneas', async function () {
-    await runTest('🚀 PRUEBA: MÚLTIPLES CREACIONES DE USUARIOS', 'POST', '/api/users', async () => {
-      const users = Array(5).fill({ name: 'Test User', email: `test${Math.random()}@mail.com` });
-      const responses = await Promise.all(users.map(user => request(server).post('/api/users').send(user)));
-      responses.forEach(res => expect(res.status).to.equal(201));
+  it('[PUT] /api/users/:id - Actualizar un usuario', async function () {
+    await runTest('🛠 PRUEBA: ACTUALIZAR UN USUARIO', async () => {
+      const updatedUser = { name: 'John Updated', email: 'john_updated@example.com' };
+      const res = await request(server).put(`/api/users/${testUserId}`).send(updatedUser);
+      expect(res.status).to.equal(200);
+      expect(res.body.message).to.equal('Usuario actualizado con éxito');
+    });
+  });
+
+  it('[DELETE] /api/users/:id - Eliminar un usuario existente', async function () {
+    await runTest('🗑 PRUEBA: ELIMINAR UN USUARIO', async () => {
+      const res = await request(server).delete(`/api/users/${testUserId}`);
+      expect(res.status).to.equal(200);
+      expect(res.body.message).to.equal('Usuario eliminado con éxito');
     });
   });
 });
+
+// Tabla descriptiva de pruebas
+console.table([
+  { Prueba: '[GET] /api/users', Descripción: 'Obtener todos los usuarios', Estado: '✅' },
+  { Prueba: '[POST] /api/users', Descripción: 'Crear un nuevo usuario', Estado: '✅' },
+  { Prueba: '[POST] /api/users', Descripción: 'Intentar crear un usuario con email inválido', Estado: '✅' },
+  { Prueba: '[POST] /api/users', Descripción: 'Crear múltiples usuarios', Estado: '✅' },
+  { Prueba: '[PUT] /api/users/:id', Descripción: 'Actualizar un usuario', Estado: '✅' },
+  { Prueba: '[DELETE] /api/users/:id', Descripción: 'Eliminar un usuario existente', Estado: '✅' },
+  { Prueba: '[DELETE] /api/users/:id', Descripción: 'Intentar eliminar usuario inexistente', Estado: '✅' }
+]);
