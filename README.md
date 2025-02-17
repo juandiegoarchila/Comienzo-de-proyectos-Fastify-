@@ -198,4 +198,3 @@ Si deseas contribuir, por favor abre un issue o un pull request con tus mejoras.
 Este proyecto está bajo la licencia **ISC**.
 
 📌 **Autor**: Juan Diego
-

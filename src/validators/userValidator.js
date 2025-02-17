@@ -1,5 +1,5 @@
 // src/validators/userValidator.js
-import Joi from 'joi';
+import Joi from "joi";
 
 export const userValidation = Joi.object({
   name: Joi.string().required(),

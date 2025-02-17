@@ -1,21 +1,21 @@
 // src/app.js
-import Fastify from 'fastify';
-import cors from '@fastify/cors';
-import helmet from '@fastify/helmet';
-import swaggerConfig from './config/swagger.js';
-import userRoutes from './routes/Users.js';
+import Fastify from "fastify";
+import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
+import swaggerConfig from "./config/swagger.js";
+import userRoutes from "./routes/Users.js";
 
 const app = Fastify({
-  logger: { level: 'info' },
+  logger: { level: "info" },
 });
 
 app.register(cors);
 app.register(helmet);
 swaggerConfig(app);
-app.register(userRoutes, { prefix: '/api' });
+app.register(userRoutes, { prefix: "/api" });
 
 app.setNotFoundHandler((request, reply) => {
-  reply.status(404).type('text/html').send(`
+  reply.status(404).type("text/html").send(`
     <!DOCTYPE html>
     <html lang="es">
     <head>
@@ -127,23 +127,23 @@ app.setNotFoundHandler((request, reply) => {
 });
 
 app.setErrorHandler((error, request, reply) => {
-    if (error.validation) {
-      // Errores de validación
-      reply.status(400).send({
-        error: 'Bad Request',
-        message: error.message,
-        details: error.validation,
-      });
-    } else {
-      // Otros errores
-      console.error(`[❌ ERROR] ${error.name}: ${error.message}`);
-      reply.status(500).send({
-        error: 'Internal Server Error',
-        message: error.message,
-        status: 500,
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-      });
-    }
-  });
-  
-  export default app;
+  if (error.validation) {
+    // Errores de validación
+    reply.status(400).send({
+      error: "Bad Request",
+      message: error.message,
+      details: error.validation,
+    });
+  } else {
+    // Otros errores
+    console.error(`[❌ ERROR] ${error.name}: ${error.message}`);
+    reply.status(500).send({
+      error: "Internal Server Error",
+      message: error.message,
+      status: 500,
+      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
+  }
+});
+
+export default app;
