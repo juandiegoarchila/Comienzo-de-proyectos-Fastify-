@@ -47,33 +47,35 @@ describe("User Controller", function () {
     await app.close();
 
     // Crear la tabla con cli-table3
-    const table = new Table({
-      head: [
-        chalk.bold("Prueba"),
-        chalk.bold("Descripción"),
-        chalk.bold("Estado"),
-        chalk.bold("Tiempo"),
-      ],
-      colWidths: [25, 40, 15, 15],
-      style: { head: ["cyan"] }, // Estilo para el encabezado
-    });
+   // Dentro del bloque after, ajusta la creación de la tabla:
+const table = new Table({
+  head: [
+    chalk.bold('#'), // Columna para el índice
+    chalk.bold('Prueba'),
+    chalk.bold('Descripción'),
+    chalk.bold('Estado'),
+    chalk.bold('Tiempo'),
+  ],
+  colWidths: [5, 25, 40, 15, 15], // Ajusta el ancho de las columnas
+  style: { head: ['cyan'] }, // Estilo para el encabezado
+});
 
-    // Agregar filas a la tabla
-    testResults.forEach((test, index) => {
-      const estado =
-        test.status === "✅" ? chalk.green("✅ PASÓ") : chalk.red("❌ FALLÓ");
-      const tiempo =
-        test.time > 1000
-          ? chalk.yellow(`${test.time}ms ⚠️`) // Advertencia si el tiempo es mayor a 1 segundo
-          : `${test.time}ms`;
+// Agregar filas a la tabla
+testResults.forEach((test, index) => {
+  const estado = test.status === '✅' ? chalk.green('✅ PASÓ') : chalk.red('❌ FALLÓ');
+  const tiempo =
+    test.time > 1000
+      ? chalk.yellow(`${test.time}ms ⚠️`) // Advertencia si el tiempo es mayor a 1 segundo
+      : `${test.time}ms`;
 
-      table.push([
-        `${index + 1}. ${test.description.split(" - ")[0]}`, // Número de prueba
-        test.description.split(" - ")[1], // Descripción
-        estado, // Estado
-        tiempo, // Tiempo
-      ]);
-    });
+  table.push([
+    index, // Número de índice
+    test.description.split(' - ')[0], // Prueba
+    test.description.split(' - ')[1], // Descripción
+    estado, // Estado
+    tiempo, // Tiempo
+  ]);
+});
 
     // Mostrar la tabla
     console.log(chalk.bold.magenta(`\n⏱️ Detalles de tiempo por prueba:`));
