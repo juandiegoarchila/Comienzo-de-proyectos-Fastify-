@@ -128,13 +128,16 @@ npx prettier --write .
 /src
 ├── /controllers     # Lógica de negocio (controladores)
 ├── /routes          # Definición de rutas
+│   ├── Users.js     # Configuración de Firebase
+│   ├── schemas
+│   ├── userSchema.js
 ├── /views           # Archivos estáticos o plantillas Handlebars
 ├── /public          # Archivos estáticos (imágenes, CSS, JS frontend)
+├── /tests          
+│   ├── userController.test.js
 ├── /config          # Configuración global del proyecto
-│   ├── db.js        # Configuración de Firebase
+│   ├── swagger.js        # Configuración de Firebase
 │   ├── config.js    # Configuración de variables de entorno
-├── /services        # Lógica adicional de servicios
-├── /middlewares     # Middlewares personalizados
 ├── app.js           # Configuración principal de Fastify
 ├── firebase.js      # Inicialización de Firebase Admin SDK
 ├── index.js         # Punto de entrada del servidor
