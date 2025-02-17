@@ -45,7 +45,7 @@ code .
 ```sh
 npm init -y
 npm install fastify @fastify/cors @fastify/helmet @fastify/jwt @fastify/swagger @fastify/swagger-ui firebase-admin dotenv joi pino
-npm install --save-dev chai mocha nodemon supertest husky lint-staged eslint prettier
+npm install --save-dev chai mocha nodemon supertest husky lint-staged eslint prettier Y npm install cli-table3
 
 
 
