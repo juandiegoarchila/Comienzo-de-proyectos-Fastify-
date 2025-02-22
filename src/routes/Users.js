@@ -8,7 +8,8 @@ import {
 import { userBodySchema, updateUserSchema } from "./schemas/userSchema.js";
 
 async function userRoutes(fastify, options) {
-  fastify.get("/users", getUsers);
+  // Se requiere autenticación para obtener usuarios
+  fastify.get("/users", { preHandler: [fastify.authenticate] }, getUsers);
   fastify.post("/users", { schema: { body: userBodySchema } }, createUser);
   fastify.put("/users/:id", { schema: { body: updateUserSchema } }, updateUser);
   fastify.delete("/users/:id", deleteUser);

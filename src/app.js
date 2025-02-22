@@ -1,9 +1,10 @@
-// src/app.js
+//src/app.js
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import swaggerConfig from "./config/swagger.js";
 import userRoutes from "./routes/Users.js";
+import fastifyJWT from "@fastify/jwt";
 
 const app = Fastify({
   logger: { level: "info" },
@@ -13,6 +14,19 @@ app.register(cors);
 app.register(helmet);
 swaggerConfig(app);
 app.register(userRoutes, { prefix: "/api" });
+
+app.register(fastifyJWT, {
+  secret: process.env.JWT_SECRET || "supersecret", // Define un secreto robusto en producción
+});
+
+// Decorador para autenticación
+app.decorate("authenticate", async function (request, reply) {
+  try {
+    await request.jwtVerify();
+  } catch (err) {
+    reply.status(401).send({ message: "Token inválido o expirado" });
+  }
+});
 
 app.setNotFoundHandler((request, reply) => {
   reply.status(404).type("text/html").send(`
@@ -128,14 +142,12 @@ app.setNotFoundHandler((request, reply) => {
 
 app.setErrorHandler((error, request, reply) => {
   if (error.validation) {
-    // Errores de validación
     reply.status(400).send({
       error: "Bad Request",
       message: error.message,
       details: error.validation,
     });
   } else {
-    // Otros errores
     console.error(`[❌ ERROR] ${error.name}: ${error.message}`);
     reply.status(500).send({
       error: "Internal Server Error",

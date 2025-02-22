@@ -1,15 +1,27 @@
-// src/controllers/userControllers.js
-
+//src/controllers/userController.js
 import { db } from "../config/config.js";
 
-// Obtener usuarios
+// Obtener usuarios con paginación
 export const getUsers = async (request, reply) => {
   try {
-    const usersSnapshot = await db.collection("users").get();
+    // Se recibe el límite y el cursor (último createdAt de la página anterior)
+    const { limit = 10, lastCreatedAt } = request.query;
+    let query = db
+      .collection("users")
+      .orderBy("createdAt")
+      .limit(parseInt(limit));
+
+    // Si se envía un cursor, usamos startAfter para comenzar la consulta desde allí
+    if (lastCreatedAt) {
+      query = query.startAfter(new Date(lastCreatedAt));
+    }
+
+    const usersSnapshot = await query.get();
     const users = usersSnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
+
     reply.send(users);
   } catch (error) {
     console.error("Error al obtener usuarios:", error);
@@ -17,7 +29,7 @@ export const getUsers = async (request, reply) => {
   }
 };
 
-// Crear usuario
+// Crear usuario con transacción para evitar duplicados
 export const createUser = async (request, reply) => {
   try {
     const { name, email } = request.body;
@@ -27,20 +39,24 @@ export const createUser = async (request, reply) => {
       testUser: request.body.testUser || false,
       createdAt: new Date(),
     };
+    const userId = email.toLowerCase();
+    const userRef = db.collection("users").doc(userId);
 
-    const userRef = await db.collection("users").add(newUser);
-
-    reply.status(201).send({
-      id: userRef.id,
-      message: "Usuario creado con éxito",
-    });
+    // El método create() falla si el documento ya existe
+    await userRef.create(newUser);
+    reply.status(201).send({ id: userId, message: "Usuario creado con éxito" });
   } catch (error) {
-    console.error("Error al crear usuario:", error);
-    reply.status(500).send({ message: "Error al crear usuario", error });
+    // Si el error es por documento existente, devolvemos conflicto (409)
+    if (error.code === 6 || error.message.includes("already exists")) {
+      reply.status(409).send({ message: "El email ya está registrado" });
+    } else {
+      console.error("Error al crear usuario:", error);
+      reply.status(500).send({ message: "Error al crear usuario" });
+    }
   }
 };
 
-// Actualizar usuario
+// Actualizar usuario con validaciones
 export const updateUser = async (request, reply) => {
   const { id } = request.params;
   const { name, email } = request.body;
