@@ -22,9 +22,7 @@
 src/
 ├── config/                    # Configuraciones globales (Firebase, Swagger, Test)
 │   ├── config.js              # Inicialización de Firebase Admin y Firestore
-│   ├── swagger.js             # Configuración de Swagger para la API
-│   └── testConfig.js          # Configuración para pruebas
-│
+│   ├── swagger.js             # Configuración de Swagger para la API│
 ├── controllers/               # Lógica de negocio
 │   └── userController.js      # CRUD para usuarios
 │
@@ -60,7 +58,7 @@ src/
 Para crear la estructura y archivos rápidamente, ejecuta este comando en un futuro que los necesites:
 
 ```sh
-mkdir src, src/config, src/controllers, src/docs, src/middleware, src/public, src/routes, src/tests, src/validators, src/views; New-Item src/index.js, src/app.js, src/config/config.js, src/config/swagger.js, src/controllers/userController.js, src/docs/usersDocs.js, src/middleware/errorHandler.js, src/middleware/notFoundHandler.js, src/middleware/validation.js, src/routes/Users.js, src/tests/userController.test.js, src/validators/userValidator.js, .env, .gitignore, README.md -ItemType File
+mkdir src, src/config, src/controllers, src/docs, src/middleware, src/public, src/routes, src/tests, src/validators, src/views; New-Item src/index.js, src/app.js, src/config/config.js, src/config/swagger.js, src/controllers/userController.js, src/docs/usersDocs.js, src/middleware/errorHandler.js, src/middleware/notFoundHandler.js, src/middleware/validation.js, src/routes/Users.js, src/tests/userController.test.js, src/validators/userValidator.js, .env, .gitignore, README.md -ItemType File y npm install -g firebase-tools
 ```
 
 ## 🔑 Requisitos Previos
